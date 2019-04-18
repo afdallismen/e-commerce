@@ -99,6 +99,23 @@ describe('User Cart tests', function () {
     })
   })
 
+  describe('DELETE /users/:user_id/cart', function () {
+    it('should send an object with 200 status code', function (done) {
+      chai
+        .request(app)
+        .delete(`/users/${this.user._id}/cart`)
+        .set('Authorization', `Bearer ${this.user.token}`)
+        .end((err, res) => {
+          expect(err).to.be.null
+          expect(res).to.have.status(200)
+          expect(res.body).to.be.an('object')
+          expect(res.body).to.have.property('cart')
+          expect(res.body.cart).to.be.an('array')
+          done()
+        })
+    })
+  })
+
   describe('POST /users/:user_id/cart/check-out', function () {
     before(function (done) {
       addProduct.call(this, done)

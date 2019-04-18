@@ -474,6 +474,50 @@ Each endpoint manipulates or displays information related to the User whose Toke
 
 
 
+## Clear Cart
+
+**Method :** `DELETE`
+
+**URL** : `/users/:user_id/cart`
+
+**Request header** : 
+
+```json
+{
+    "Authorization": Bearer <token>
+}
+```
+
+**Request Body** :
+
+```json
+{
+    "cart": []
+}
+```
+
+
+
+**Response Success**
+
+**Status** : `200`
+
+**Body** : `None`
+
+**Response Error**
+
+**Status** : `500`
+
+**Body** :
+
+```json
+{
+    "message": "Internal Server Error."
+}
+```
+
+
+
 ## Check-out User Cart
 
 **Method :** `POST`

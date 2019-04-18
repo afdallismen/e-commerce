@@ -48,6 +48,15 @@ class Cart {
       })
       .catch(err => res.status(500).json({ message: 'Internal Server Error.' }))
   }
+
+  static clear (req, res) {
+    req.user.cart.splice()
+    req.user.save()
+      .then(user => {
+        res.status(200).json({ cart: req.user.cart })
+      })
+      .catch(err => res.status(500).json({ message: 'Internal Server Error.' }))
+  }
 }
 
 module.exports = Cart
