@@ -1,6 +1,16 @@
 const Product = require('../../models/Product')
 
 class Cart {
+  static list (req, res) {
+    req.user
+      .populate('cart')
+      .execPopulate()
+      .then(user => {
+        res.status(200).json({ cart: user.cart })
+      })
+      .catch(err => res.status(500).json({ message: 'Internal Server Error.' }))
+  }
+
   static addProduct (req, res) {
     Product
       .findById(req.body.product._id)
@@ -30,7 +40,7 @@ class Cart {
       .findById(req.params.product_id)
       .then(product => {
         if (product) {
-          req.user.cart.pull(product._id)
+          req.user.cart.splice(req.user.cart.indexOf(product), 1)
           return req.user.save()
         } else {
           res.status(404).json({ message: 'Product not found.' })
@@ -50,7 +60,7 @@ class Cart {
   }
 
   static clear (req, res) {
-    req.user.cart.splice()
+    req.user.cart = []
     req.user.save()
       .then(user => {
         res.status(200).json({ cart: req.user.cart })

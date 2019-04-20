@@ -5,10 +5,10 @@ const faker = require('faker')
 const app = require('../../app')
 const {
   createUser,
-  loginUser,
   clearDb,
   createProduct
 } = require('../../helpers/test')
+const { createToken } = require('../../helpers/auth')
 
 const expect = chai.expect
 
@@ -24,11 +24,13 @@ after(function (done) {
 
 describe('User Product tests', function () {
   before(function (done) {
-    createUser.call(this, done)
-  })
-
-  before(function (done) {
-    loginUser.call(this, done)
+    createUser()
+      .then(user => {
+        this.user = user
+        this.token = createToken(user)
+        done()
+      })
+      .catch(done)
   })
 
   describe('POST /users/:user_id/products', function () {
@@ -41,19 +43,19 @@ describe('User Product tests', function () {
       chai
         .request(app)
         .post(`/users/${this.user._id}/products`)
-        .set('Authorization', `Bearer ${this.user.token}`)
+        .set('Authorization', `Bearer ${this.token}`)
         .send(createdProduct)
         .end((err, res) => {
           expect(err).to.be.null
           expect(res).to.have.status(201)
           expect(res.body).to.be.an('object')
           expect(res.body).to.have.property('product')
-          expect(res.body).to.have.nested.property('product._id')
-          expect(res.body).to.have.nested.property('product.name')
-          expect(res.body).to.have.nested.property('product.stock')
-          expect(res.body).to.have.nested.property('product.price')
-          expect(res.body).to.have.nested.property('product.owner_id')
-          expect(res.body.product.owner_id).to.equal(String(this.user._id))
+          expect(res.body.product).to.have.property('_id')
+          expect(res.body.product).to.have.property('name')
+          expect(res.body.product).to.have.property('stock')
+          expect(res.body.product).to.have.property('price')
+          expect(res.body.product).to.have.property('owner_id')
+          expect(res.body.product.owner_id).to.equal(this.user.id)
           expect(res.body.product.name).to.equal(createdProduct.name)
           expect(res.body.product.stock).to.equal(createdProduct.stock)
           expect(res.body.product.price).to.equal(createdProduct.price)
@@ -64,7 +66,15 @@ describe('User Product tests', function () {
 
   describe('PUT /users/:user_id/products/:product_id', function () {
     before(function (done) {
-      createProduct.call(this, done)
+      createProduct(this.user.id)
+        .then(product => {
+          this.product = product
+          done()
+        })
+        .catch(done)
+    })
+    after(function (done) {
+      clearDb(['Product'], done)
     })
 
     it('should return an object with 200 status code', function (done) {
@@ -76,7 +86,7 @@ describe('User Product tests', function () {
       chai
         .request(app)
         .put(`/users/${this.user._id}/products/${this.product._id}`)
-        .set('Authorization', `Bearer ${this.user.token}`)
+        .set('Authorization', `Bearer ${this.token}`)
         .send(newProduct)
         .end((err, res) => {
           expect(err).to.be.null
@@ -88,7 +98,7 @@ describe('User Product tests', function () {
           expect(res.body).to.have.nested.property('product.stock')
           expect(res.body).to.have.nested.property('product.price')
           expect(res.body).to.have.nested.property('product.owner_id')
-          expect(res.body.product.owner_id).to.equal(String(this.user._id))
+          expect(res.body.product.owner_id).to.equal(this.user.id)
           expect(res.body.product.name).to.equal(newProduct.name)
           expect(res.body.product.stock).to.equal(newProduct.stock)
           expect(res.body.product.price).to.equal(newProduct.price)
@@ -99,21 +109,29 @@ describe('User Product tests', function () {
 
   describe('DELETE /users/:user_id/products/:product_id', function () {
     before(function (done) {
-      createProduct.call(this, done)
+      createProduct(this.user.id)
+        .then(product => {
+          this.product = product
+          done()
+        })
+        .catch(done)
+    })
+    after(function (done) {
+      clearDb(['Product'], done)
     })
 
     it('should return an object with 200 status code', function (done) {
       chai
         .request(app)
         .delete(`/users/${this.user._id}/products/${this.product._id}`)
-        .set('Authorization', `Bearer ${this.user.token}`)
+        .set('Authorization', `Bearer ${this.token}`)
         .end((err, res) => {
           expect(err).to.be.null
           expect(res).to.have.status(200)
           expect(res.body).to.be.an('object')
           expect(res.body).to.have.property('product')
           expect(res.body).to.have.nested.property('product._id')
-          expect(res.body.product._id).to.equal(String(this.product._id))
+          expect(res.body.product._id).to.equal(this.product.id)
           done()
         })
     })

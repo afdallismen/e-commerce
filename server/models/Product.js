@@ -4,6 +4,7 @@ const productSchema = mongoose.Schema({
   name: String,
   stock: Number,
   price: Number,
+  image: String,
   owner_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'user'

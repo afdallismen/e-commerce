@@ -40,9 +40,14 @@ Each endpoint manipulates or displays information related to the Product created
 
 Each endpoint manipulates or displays information related to the User whose Token is provided with the request.
 
+- [Fetch User Cart](#fetch-user-cart) : `GET /users/:user_id/cart`
+
 - [Add a product into Cart](#add-a-product-into-cart) : `POST /users/:user_id/cart`
+
 - [Remove a product from Cart](#remove-a-product-from-cart) : `DELETE /users/:user_id/cart/:product_id`
-- Clear Cart : `DELETE /users/:user_id/cart`
+
+- [Clear Cart](#clear-cart) : `DELETE /users/:user_id/cart`
+
 - [Check-out User Cart](#check-out-user-cart) : `POST /users/:user_id/cart/check-out`
 
 
@@ -57,8 +62,8 @@ Each endpoint manipulates or displays information related to the User whose Toke
 
 ```json
 {
-    "login": String,
-    "password": String
+    "email": "String",
+    "password": "String"
 }
 ```
 
@@ -71,11 +76,11 @@ Each endpoint manipulates or displays information related to the User whose Toke
 ```json
 {
     "user": {
-        "_id": String,
-        "username": String,
-        "email": String,
+        "id": "String",
+        "username": "String",
+        "email": "String"
     },
-    "token": String
+    "token": "String"
 }
 ```
 
@@ -103,9 +108,9 @@ Each endpoint manipulates or displays information related to the User whose Toke
 
 ```json
 {
-    "username": String,
-    "email": String,
-    "password": String
+    "username": "String",
+    "email": "String",
+    "password": "String"
 }
 ```
 
@@ -118,9 +123,9 @@ Each endpoint manipulates or displays information related to the User whose Toke
 ```json
 {
     "user": {
-        "_id": String,
-        "username": String,
-        "email": String,
+        "id": "String",
+        "username": "String",
+        "email": "String"
     }
 }
 ```
@@ -359,6 +364,57 @@ Each endpoint manipulates or displays information related to the User whose Toke
     "product": {
         "_id": String
    	}
+}
+```
+
+**Response Error**
+
+**Status** : `500`
+
+**Body** :
+
+```json
+{
+    "message": "Internal Server Error."
+}
+```
+
+
+
+## Fetch User Cart
+
+**Method :** `GET`
+
+**URL** : `/users/:user_id/cart`
+
+**Request header** : 
+
+```json
+{
+    "Authorization": "Bearer <token>"
+}
+```
+
+**Request Body** : `None`
+
+**Response Success**
+
+**Status** : `200`
+
+**Body** : 
+
+```json
+{
+    "cart": [
+        {
+            "_id": "String",
+            "name": "String",
+            "stock": "Number",
+            "price": "Number",
+            "owner_id": "String"
+        }
+        ...
+    ]
 }
 ```
 

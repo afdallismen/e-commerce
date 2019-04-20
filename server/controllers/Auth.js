@@ -9,36 +9,22 @@ class Auth {
         email: req.body.email,
         password: req.body.password
       })
-      .then(user => res.status(201).json({
-        user: {
-          _id: user._id,
-          username: user.username,
-          email: user.email
-        }
-      }))
+      .then(user => {
+        let payload = { user: user.toJSON() }
+        delete payload.user.password
+        res.status(201).json(payload)
+      })
       .catch(err => res.status(500).json({ message: 'Internal Server Error.' }))
   }
 
   static login (req, res) {
     User
-      .findOne({
-        $or: [
-          { username: req.body.login },
-          { email: req.body.login }
-        ]
-      })
+      .findOne({ email: req.body.email })
       .select('+password')
       .then(user => {
         if (user && user.comparePassword(req.body.password)) {
-          let token = createToken(user)
-          let payload = {
-            token,
-            user: {
-              _id: user._id,
-              username: user.username,
-              email: user.email
-            }
-          }
+          let payload = { user: user.toJSON(), token: createToken(user) }
+          delete payload.user.password
           res.status(201).json(payload)
         } else {
           res.status(400).json({ message: 'Wrong login or password.' })

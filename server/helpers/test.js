@@ -14,20 +14,18 @@ module.exports = {
     .then(_ => done())
     .catch(done)
   },
-  createUser: function (done) {
+  createUser: _ => {
     let rawPassword = faker.internet.password()
-    models.User
+    return models.User
       .create({
         username: faker.internet.userName(),
         email: faker.internet.email(),
         password: rawPassword
       })
       .then(user => {
-        this.user = user
-        this.user.rawPassword = rawPassword
-        done()
+        user.rawPassword = rawPassword
+        return user
       })
-      .catch(done)
   },
   loginUser: function (done) {
     let token = jwt.sign({
@@ -38,27 +36,17 @@ module.exports = {
     this.user.token = token
     done()
   },
-  createProduct: function (done) {
-    models.Product
+  createProduct: owner_id => {
+    return models.Product
       .create({
         name: faker.commerce.productName(),
         stock: faker.random.number(),
         price: faker.commerce.price(),
-        owner_id: this.user ? this.user._id : new mongoose.Types.ObjectId()
+        owner_id
       })
-      .then(product => {
-        this.product = product
-        done()
-      })
-      .catch(done)
   },
-  addProduct: function (done) {
-    this.user.cart.push(this.product._id)
-    this.user.save()
-      .then(user => {
-        this.user = user
-        done()
-      })
-      .catch(done)
+  addProduct: (user, product) => {
+    user.cart.push(product._id)
+    return user.save()
   }
 }

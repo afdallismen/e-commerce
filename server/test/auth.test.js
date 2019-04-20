@@ -4,6 +4,7 @@ const faker = require('faker')
 
 const app = require('../app')
 const { clearDb, createUser } = require('../helpers/test')
+const { verifyToken } = require('../helpers/auth')
 
 const expect = chai.expect
 
@@ -19,7 +20,12 @@ after(function (done) {
 
 describe('Auth tests', _ => {
   before(function (done) {
-    createUser.call(this, done)
+    createUser()
+      .then(user => {
+        this.user = user
+        done()
+      })
+      .catch(done)
   })
 
   describe('POST /auth/register', _ => {
@@ -38,12 +44,14 @@ describe('Auth tests', _ => {
           expect(res).to.have.status(201)
           expect(res.body).to.be.an('object')
           expect(res.body).to.have.property('user')
-          expect(res.body).to.have.nested.property('user._id')
-          expect(res.body).to.have.nested.property('user.username')
-          expect(res.body).to.have.nested.property('user.email')
-          expect(res.body).to.not.have.nested.property('user.password')
+          expect(res.body.user).to.have.property('_id')
+          expect(res.body.user).to.have.property('username')
+          expect(res.body.user).to.have.property('email')
+          expect(res.body.user).to.have.property('cart')
+          expect(res.body.user).to.not.have.property('password')
           expect(res.body.user.username).to.equal(user.username)
           expect(res.body.user.email).to.equal(user.email)
+          expect(res.body.user.cart).to.be.empty
           done()
         })
     })
@@ -54,18 +62,25 @@ describe('Auth tests', _ => {
       chai
         .request(app)
         .post('/auth/login')
-        .send({ login: this.user.username, password: this.user.rawPassword })
+        .send({ email: this.user.email, password: this.user.rawPassword })
         .end((err, res) => {
           expect(err).to.be.null
           expect(res).to.have.status(201)
           expect(res.body).to.be.an('object')
           expect(res.body).to.have.property('user')
-          expect(res.body).to.have.property('token')
-          expect(res.body).to.have.nested.property('user.username')
-          expect(res.body).to.have.nested.property('user.email')
-          expect(res.body).to.not.have.nested.property('user.password')
+          expect(res.body.user).to.have.property('_id')
+          expect(res.body.user).to.have.property('username')
+          expect(res.body.user).to.have.property('email')
+          expect(res.body.user).to.have.property('cart')
+          expect(res.body.user).to.not.have.property('password')
+          expect(res.body.user._id).to.equal(this.user.id)
           expect(res.body.user.username).to.equal(this.user.username)
           expect(res.body.user.email).to.equal(this.user.email)
+          expect(res.body.user.cart).to.be.empty
+
+          expect(res.body).to.have.property('token')
+          expect(res.body.token).to.not.equal(false)
+          expect((verifyToken(res.body.token)._id)).to.equal(this.user.id)
           done()
         })
     })

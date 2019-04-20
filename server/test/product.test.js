@@ -27,7 +27,12 @@ describe('Product tests', _ => {
 
   describe('GET /products/:product_id', function () {
     before(function (done) {
-      createProduct.call(this, done)
+      createProduct()
+        .then(product => {
+          this.product = product
+          done()
+        })
+        .catch(done)
     })
 
     it('should send an object with 200 status code', function (done) {
@@ -39,11 +44,11 @@ describe('Product tests', _ => {
           expect(res).to.have.status(200)
           expect(res.body).to.be.an('object')
           expect(res.body).to.have.property('product')
-          expect(res.body).to.have.nested.property('product._id')
-          expect(res.body).to.have.nested.property('product.name')
-          expect(res.body).to.have.nested.property('product.stock')
-          expect(res.body).to.have.nested.property('product.price')
-          expect(res.body.product._id).to.equal(String(this.product._id))
+          expect(res.body.product).to.have.property('_id')
+          expect(res.body.product).to.have.property('name')
+          expect(res.body.product).to.have.property('stock')
+          expect(res.body.product).to.have.property('price')
+          expect(res.body.product._id).to.equal(this.product.id)
           expect(res.body.product.name).to.equal(this.product.name)
           expect(res.body.product.stock).to.equal(this.product.stock)
           expect(res.body.product.price).to.equal(this.product.price)

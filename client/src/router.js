@@ -9,8 +9,18 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'index',
-      component: Index
+      name: 'home',
+      component: () => import('./views/Home.vue')
+    },
+    {
+      path: '/shop',
+      name: 'shop',
+      component: () => import('./views/UserShop.vue')
+    },
+    {
+      path: '/cart',
+      name: 'cart',
+      component: () => import('./views/UserCart.vue')
     }
   ]
 })

@@ -2,6 +2,7 @@ require('dotenv').config()
 
 const express = require('express')
 const mongoose = require('mongoose')
+const cors = require('cors')
 
 const routes = require('./routes')
 
@@ -13,6 +14,8 @@ mongoose.connect('mongodb://localhost:27017/ecommerce', {
 
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
+app.use(cors())
+app.use(express.static(__dirname))
 
 app.use('/', routes)
 

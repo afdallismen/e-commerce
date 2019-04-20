@@ -5,10 +5,10 @@ const app = require('../../app')
 const {
   clearDb,
   createUser,
-  loginUser,
   createProduct,
   addProduct
 } = require('../../helpers/test')
+const { createToken } = require('../../helpers/auth')
 
 const expect = chai.expect
 
@@ -24,15 +24,34 @@ after(function (done) {
 
 describe('User Cart tests', function () {
   before(function (done) {
-    createUser.call(this, done)
+    createUser()
+      .then(user => {
+        this.user = user
+        this.token = createToken(user)
+        return createProduct(user)
+      })
+      .then(product => {
+        this.product = product
+        done()
+      })
+      .catch(done)
   })
 
-  before(function (done) {
-    loginUser.call(this, done)
-  })
-
-  before(function (done) {
-    createProduct.call(this, done)
+  describe('GET /users/:user_id/cart', function () {
+    it('should send an object with 200 status code', function (done) {
+      chai
+        .request(app)
+        .get(`/users/${this.user._id}/cart`)
+        .set('Authorization', `Bearer ${this.token}`)
+        .end((err, res) => {
+          expect(err).to.be.null
+          expect(res).to.have.status(200)
+          expect(res.body).to.be.an('object')
+          expect(res.body).to.have.property('cart')
+          expect(res.body.cart).to.be.an('array')
+          done()
+        })
+    })
   })
 
   describe('POST /users/:user_id/cart', function () {
@@ -40,7 +59,7 @@ describe('User Cart tests', function () {
       chai
         .request(app)
         .post(`/users/${this.user._id}/cart`)
-        .set('Authorization', `Bearer ${this.user.token}`)
+        .set('Authorization', `Bearer ${this.token}`)
         .send({ product: this.product })
         .end((err, res) => {
           expect(err).to.be.null
@@ -49,12 +68,12 @@ describe('User Cart tests', function () {
           expect(res.body).to.have.property('product')
           expect(res.body).to.have.property('count')
           expect(res.body).to.have.nested.property('product._id')
-          expect(res.body.product._id).to.equal(String(this.product._id))
+          expect(res.body.product._id).to.equal(this.product.id)
           expect(res.body.count).to.equal(1)
           chai
             .request(app)
             .post(`/users/${this.user._id}/cart`)
-            .set('Authorization', `Bearer ${this.user.token}`)
+            .set('Authorization', `Bearer ${this.token}`)
             .send({ product: this.product })
             .end((err, res) => {
               expect(err).to.be.null
@@ -63,7 +82,7 @@ describe('User Cart tests', function () {
               expect(res.body).to.have.property('product')
               expect(res.body).to.have.property('count')
               expect(res.body).to.have.nested.property('product._id')
-              expect(res.body.product._id).to.equal(String(this.product._id))
+              expect(res.body.product._id).to.equal(this.product.id)
               expect(res.body.count).to.equal(2)
               done()
             })
@@ -73,7 +92,12 @@ describe('User Cart tests', function () {
 
   describe('DELETE /users/:user_id/cart/:product_id', function () {
     before(function (done) {
-      addProduct.call(this, done)
+      addProduct(this.user, this.product)
+        .then(user => {
+          this.user = user
+          done()
+        })
+        .catch(done)
     })
 
     it('should send an object with 200 status code', function (done) {
@@ -84,7 +108,7 @@ describe('User Cart tests', function () {
       chai
         .request(app)
         .delete(`/users/${this.user._id}/cart/${this.product._id}`)
-        .set('Authorization', `Bearer ${this.user.token}`)
+        .set('Authorization', `Bearer ${this.token}`)
         .end((err, res) => {
           expect(err).to.be.null
           expect(res).to.have.status(200)
@@ -92,7 +116,7 @@ describe('User Cart tests', function () {
           expect(res.body).to.have.property('product')
           expect(res.body).to.have.property('count')
           expect(res.body).to.have.nested.property('product._id')
-          expect(res.body.product._id).to.equal(String(this.product._id))
+          expect(res.body.product._id).to.equal(this.product.id)
           expect(res.body.count).to.equal(previousCount - 1)
           done()
         })
@@ -104,7 +128,7 @@ describe('User Cart tests', function () {
       chai
         .request(app)
         .delete(`/users/${this.user._id}/cart`)
-        .set('Authorization', `Bearer ${this.user.token}`)
+        .set('Authorization', `Bearer ${this.token}`)
         .end((err, res) => {
           expect(err).to.be.null
           expect(res).to.have.status(200)
@@ -118,14 +142,19 @@ describe('User Cart tests', function () {
 
   describe('POST /users/:user_id/cart/check-out', function () {
     before(function (done) {
-      addProduct.call(this, done)
+      addProduct(this.user, this.product)
+        .then(user => {
+          this.user = user
+          done()
+        })
+        .catch(done)
     })
 
     it('should send an object with 201 status code', function (done) {
       chai
         .request(app)
         .post(`/users/${this.user._id}/cart/check-out`)
-        .set('Authorization', `Bearer ${this.user.token}`)
+        .set('Authorization', `Bearer ${this.token}`)
         .end((err, res) => {
           expect(err).to.be.null
           expect(res).to.have.status(201)
